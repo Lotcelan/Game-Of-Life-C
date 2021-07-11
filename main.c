@@ -152,7 +152,7 @@ int main()
     InitWindow(screenWidth, screenHeight, "Cellular Automata");
 
 
-    SetTargetFPS(30);               // Set our game to run at 60 frames-per-second
+              // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
     bool pause = false;
@@ -164,6 +164,7 @@ int main()
     bool populateRandomly = false;
 
     int sizeOfBrush = 3;
+    int fps = 15;
 
     int menuStartX = GetScreenWidth() - 250;
     int menuStartY = 0;
@@ -198,6 +199,7 @@ int main()
     {
         // Update
         //----------------------------------------------------------------------------------
+        SetTargetFPS(fps);     
         if (reset == 1) {
             // Clear all cells
             for (int i = 0; i < rows * cols; i++) {
@@ -309,9 +311,13 @@ int main()
 
             //printf("Mouse pos : %d ; %d for cell %d %d\n", mousePosX, mousePosY, xCellClicked, yCellClicked);
 
-            if (xCellClicked >= 0 && xCellClicked <= (cols - 1) && yCellClicked >= 0 && yCellClicked <= (rows - 1)) {
-                listOfCells[locToSlot(xCellClicked, yCellClicked, rows, cols)].alive = 0;
-                listOfCellsToDraw[locToSlot(xCellClicked, yCellClicked, rows, cols)].alive = 0  ;
+            for (int i = xCellClicked - sizeOfBrush; i < xCellClicked + sizeOfBrush + 1; i++) {
+                for (int j = yCellClicked - sizeOfBrush; j < yCellClicked + sizeOfBrush + 1; j++) {
+                    if (i >= 0 && i <= (cols - 1) && j >= 0 && j <= (rows - 1)) {
+                        listOfCells[locToSlot(i, j, rows, cols)].alive = 0;
+                        listOfCellsToDraw[locToSlot(i, j, rows, cols)].alive = 0;
+                    }
+                }
             }
             /*
             int stateArray[8] = {0};
@@ -351,6 +357,8 @@ int main()
             populateRandomly = GuiCheckBox((Rectangle){ menuStartX + 10, GetScreenHeight() - 110, 25, 25 }, "Populate randomly", populateRandomly);
             
             sizeOfBrush = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 120, 120, 20 }, "Size of brush", NULL, sizeOfBrush, 0, 75);
+            fps = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 180, 120, 20 }, "FPS", NULL, fps, 1, 120);
+
 
             // Jeu
 
