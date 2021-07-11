@@ -10,10 +10,7 @@
 
 void renderGrid(int cols, int rows, int thiccness, int menuStartX) {
     float xSpacing = (float)menuStartX / (float)cols;
-    /*
-    for (int i = xSpacing; i < menuStartX; i += xSpacing) {
-        DrawLine(i, 0, i, GetScreenHeight(), LIGHTGRAY);
-    }*/
+
     for (int i = 0; i < cols; i++) {
         DrawLine(xSpacing * i, 0, xSpacing * i, GetScreenHeight(), LIGHTGRAY);
 
@@ -24,7 +21,7 @@ void renderGrid(int cols, int rows, int thiccness, int menuStartX) {
     }
 }
 
-void fillCell(int xCell, int yCell, int cols, int rows, int menuStartX, int aliveState) {
+void fillCell(int xCell, int yCell, int cols, int rows, int menuStartX, int aliveState, int doColor, int date, int framesSinceBeginning, int redC, int greenC, int blueC) {
 
     float xSpacing = (float)menuStartX / (float)cols;
     float ySpacing = (float)GetScreenHeight() / (float)rows;
@@ -32,13 +29,20 @@ void fillCell(int xCell, int yCell, int cols, int rows, int menuStartX, int aliv
     float startPosX = (float)xCell * xSpacing;
     float startPosY = (float)yCell * ySpacing;
 
-    //printf("Filling from %f, %f with a spacing of %f, %f\n", startPosX, startPosY, xSpacing, ySpacing);
-
     if (aliveState == 1) {
         DrawRectangle(startPosX, startPosY, xSpacing, ySpacing, LIGHTGRAY);
     } else {
-        DrawRectangle(startPosX, startPosY, xSpacing, ySpacing, BLACK);
+        if (doColor == 1 && date != 0) {
+            if (xCell == 0 && yCell == 0) {
+            }
+            double decay = framesSinceBeginning - date;
+            
+            DrawRectangle(startPosX, startPosY, xSpacing, ySpacing, CLITERAL(Color){ (255 / ((int)log2(decay) + 1)) * redC, (255 / ((int)log2(decay) + 1)) * greenC, (255 / ((int)log2(decay) + 1)) * blueC, 255});
+            //DrawRectangle(startPosX, startPosY, xSpacing, ySpacing, CLITERAL(Color){ 255 - (35*decay )%256, 0, 255- (35*decay/255)%256 , 255});
 
+        } else {
+            DrawRectangle(startPosX, startPosY, xSpacing, ySpacing, BLACK);
+        }
     }
 
 }
@@ -58,9 +62,7 @@ int isAlive(int posX, int posY, int rows, int cols, Cell listOfCells[])
 
 
 void getStateOfNeighbours(int *stateArray, int posX, int posY, Cell listOfCells[], int cols, int rows) {
-    //int localArray[8];
-    //bool created = false;
-    
+
     /*
      0 | 1 | 2
     ---|---|---
@@ -69,7 +71,6 @@ void getStateOfNeighbours(int *stateArray, int posX, int posY, Cell listOfCells[
      6 | 5 | 4
     */
 
-// Pour l'implémentation ligne: 63 à 125
     int cell0 = isAlive(posX - 1, posY - 1, rows, cols, listOfCells);
     int cell1 = isAlive(posX, posY - 1, rows, cols, listOfCells);
     int cell2 = isAlive(posX + 1, posY - 1, rows, cols, listOfCells);
@@ -79,62 +80,6 @@ void getStateOfNeighbours(int *stateArray, int posX, int posY, Cell listOfCells[
     int cell6 = isAlive(posX - 1, posY + 1, rows, cols, listOfCells);
     int cell7 = isAlive(posX - 1, posY, rows, cols, listOfCells);
     int localArray[8] = {cell0, cell1, cell2, cell3, cell4, cell5, cell6, cell7};
-/*
-    // Si dans les coins, si sur un bord, sinon classique
-    int cell0 = listOfCells[locToSlot(posX - 1, posY - 1, rows, cols)].alive;
-    int cell1 = listOfCells[locToSlot(posX, posY - 1, rows, cols)].alive;
-    int cell2 = listOfCells[locToSlot(posX + 1, posY - 1, rows, cols)].alive;
-    int cell3 = listOfCells[locToSlot(posX + 1, posY, rows, cols)].alive;   
-    int cell4 = listOfCells[locToSlot(posX + 1, posY + 1, rows, cols)].alive;
-    int cell5 = listOfCells[locToSlot(posX, posY + 1, rows, cols)].alive;
-    int cell6 = listOfCells[locToSlot(posX - 1, posY + 1, rows, cols)].alive;
-    int cell7 = listOfCells[locToSlot(posX - 1, posY, rows, cols)].alive;
-
-
-    if (posX == 0 && posY == 0) {
-        int localArray[8] = {0, 0, 0, cell3, cell4, cell5, 0, 0};
-        created = true;
-    }
-
-    else if (posX == (cols - 1) && posY == 0) {
-        int localArray[8] = {0, 0, 0, 0, 0, cell5, cell6, cell7};
-        created = true;
-    }
-
-    else if (posX == 0 && posY == (rows - 1)) {
-        int localArray[8] = {0, cell1, cell2, cell3, 0, 0, 0, 0};
-        created = true;
-    }
-
-    else if (posX == (cols - 1) && posY == (rows - 1)) {
-        int localArray[8] = {cell0, cell1, 0, 0, 0, 0, 0, cell7};
-        
-        created = true;
-    }
-
-    else if (posY == 0) {
-        int localArray[8] = {0, 0, 0, cell3, cell4, cell5, cell6, cell7};
-        created = true;
-    }
-    
-    else if (posX == 0) {
-        int localArray[8] = {0, cell1, cell2, cell3, cell4, cell5, 0, 0};
-        created = true;
-    }
-
-    else if (posY == (rows - 1)) {
-        int localArray[8] = {cell0, cell1, cell2, cell3, 0, 0 , 0, cell7};
-        created = true;
-    }
-    else if (posX == (cols -1)) {
-        int localArray[8] = {cell0, cell1, 0, 0, 0, cell5, cell6, cell7};
-        created = true;
-    }
-    else {
-        int localArray[8] = {cell0, cell1, cell2, cell3, cell4, cell5, cell6, cell7};
-        created = true;
-    }
-*/
 
     for (int i = 0; i < 8; i++) {
         stateArray[i] = localArray[i];
@@ -163,9 +108,15 @@ int main()
     bool displayDebug = false;
     bool populateRandomly = false;
     bool populateRandomlyOnClick = false;
+    
+    bool doColor = false;
+    bool redC = true;
+    bool greenC = false;
+    bool blueC = true;
+
 
     int sizeOfBrush = 3;
-    int fps = 15;
+    int fps = 30;
 
     int menuStartX = GetScreenWidth() - 250;
     int menuStartY = 0;
@@ -173,7 +124,7 @@ int main()
     VECTOR_INIT(debugMessages);
     int debugMessageAlive = 0;
 
-    long framesSinceBeginning = 0;
+    long framesSinceBeginning = 1;
 
     int cols = 225;
     int rows = 175;
@@ -186,14 +137,11 @@ int main()
         deadCell.x = i % cols;
         deadCell.y = i / cols;
         deadCell.alive = 0;
-        deadCell.dateCreated = framesSinceBeginning;
+        deadCell.dateCreated = 0;
 
         listOfCells[i] = deadCell;
         listOfCellsToDraw[i] = deadCell;
     }
-
-
-    //TODO : liste de cells, fonction findNeighbours, etc
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
@@ -259,10 +207,10 @@ int main()
                     listOfCellsToDraw[i].alive = 0;
                 }
                 
-            }
+            };
+
+            framesSinceBeginning++;
         }
-
-
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (GetMouseX() >= 0 && GetMouseX() <= menuStartX && GetMouseY() >= 0 && GetMouseY() <= GetScreenHeight())) {
             int mousePosX = GetMouseX();
@@ -270,8 +218,6 @@ int main()
 
             int xCellClicked = (float)mousePosX / ((float)menuStartX / (float)cols);
             int yCellClicked = (float)mousePosY / ((float)GetScreenHeight() / (float)rows);
-
-            //printf("Mouse pos : %d ; %d for cell %d %d\n", mousePosX, mousePosY, xCellClicked, yCellClicked);
 
             for (int i = xCellClicked - sizeOfBrush; i < xCellClicked + sizeOfBrush + 1; i++) {
                 for (int j = yCellClicked - sizeOfBrush; j < yCellClicked + sizeOfBrush + 1; j++) {
@@ -288,36 +234,15 @@ int main()
                     }
                 }
             }
-            /*
-            if (xCellClicked >= 0 && xCellClicked <= (cols - 1) && yCellClicked >= 0 && yCellClicked <= (rows - 1)) {
-                listOfCells[locToSlot(xCellClicked, yCellClicked, rows, cols)].alive = 1;
-                listOfCellsToDraw[locToSlot(xCellClicked, yCellClicked, rows, cols)].alive = 1;
-            }*/
-            /*
-            int stateArray[8] = {0};
 
-            getStateOfNeighbours(stateArray, xCellClicked, yCellClicked, listOfCells, cols, rows);
-
-            char *oui = (char*)malloc(50 * sizeof(char));
-            sprintf(oui, "Neighbours : (%d, %d, %d, %d, %d, %d, %d, %d)", stateArray[0], stateArray[1], stateArray[2], stateArray[3], stateArray[4], stateArray[5], stateArray[6], stateArray[7]);
-
-            //free(oui);
-            VECTOR_ADD(debugMessages, oui);
-            printf("Neighbours : (%d, %d, %d, %d, %d, %d, %d, %d)\n", stateArray[0], stateArray[1], stateArray[2], stateArray[3], stateArray[4], stateArray[5], stateArray[6], stateArray[7]);
-
-            */
         }
 
         else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && (GetMouseX() >= 0 && GetMouseX() <= menuStartX && GetMouseY() >= 0 && GetMouseY() <= GetScreenHeight())) {
             int mousePosX = GetMouseX();
             int mousePosY = GetMouseY();
 
-            
-
             int xCellClicked = (float)mousePosX / ((float)menuStartX / (float)cols);
             int yCellClicked = (float)mousePosY / ((float)GetScreenHeight() / (float)rows);
-
-            //printf("Mouse pos : %d ; %d for cell %d %d\n", mousePosX, mousePosY, xCellClicked, yCellClicked);
 
             for (int i = xCellClicked - sizeOfBrush; i < xCellClicked + sizeOfBrush + 1; i++) {
                 for (int j = yCellClicked - sizeOfBrush; j < yCellClicked + sizeOfBrush + 1; j++) {
@@ -327,22 +252,9 @@ int main()
                     }
                 }
             }
-            /*
-            int stateArray[8] = {0};
 
-            getStateOfNeighbours(stateArray, xCellClicked, yCellClicked, listOfCells, cols, rows);
-
-            char *oui = (char*)malloc(50 * sizeof(char));
-            sprintf(oui, "Neighbours : (%d, %d, %d, %d, %d, %d, %d, %d)", stateArray[0], stateArray[1], stateArray[2], stateArray[3], stateArray[4], stateArray[5], stateArray[6], stateArray[7]);
-
-            //free(oui);
-            VECTOR_ADD(debugMessages, oui);
-            printf("Neighbours : (%d, %d, %d, %d, %d, %d, %d, %d)\n", stateArray[0], stateArray[1], stateArray[2], stateArray[3], stateArray[4], stateArray[5], stateArray[6], stateArray[7]);
-
-            */
         }
 
-        //TODO: Fix quand on dessine trop à droite = on dessine à gauche
 
         // Draw
         //----------------------------------------------------------------------------------
@@ -357,13 +269,22 @@ int main()
 
             pause = GuiCheckBox((Rectangle){ menuStartX + 10, menuStartY + 40, 25, 25 }, "Pause", pause);
             if (pause != 1) {
-            pauseWhenClicked = GuiCheckBox((Rectangle){ menuStartX + 100, menuStartY + 40, 25, 25 }, "Pause when clicked", pauseWhenClicked);
+                pauseWhenClicked = GuiCheckBox((Rectangle){ menuStartX + 100, menuStartY + 40, 25, 25 }, "Pause when clicked", pauseWhenClicked);
             }
             reset = GuiCheckBox((Rectangle){ menuStartX + 10, GetScreenHeight() - 30, 25, 25 }, "Reset ?", reset);
             displayGrid = GuiCheckBox((Rectangle){ menuStartX + 10, menuStartY + 80, 25, 25 }, "Display Grid", displayGrid);
             displayDebug = GuiCheckBox((Rectangle){ menuStartX + 10, GetScreenHeight() - 70, 25, 25 }, "Display debug messages", displayDebug);
             populateRandomly = GuiCheckBox((Rectangle){ menuStartX + 10, GetScreenHeight() - 110, 25, 25 }, "Populate randomly", populateRandomly);
             populateRandomlyOnClick = GuiCheckBox((Rectangle){ menuStartX + 10, 230, 25, 25 }, "Populate randomly on click", populateRandomlyOnClick);
+            
+            doColor = GuiCheckBox((Rectangle){ menuStartX + 10, 270, 25, 25 }, "Colors", doColor);
+            
+            if (doColor) {
+                redC = GuiCheckBox((Rectangle){ menuStartX + 35, 300, 15, 15 }, "Red", redC);
+                greenC = GuiCheckBox((Rectangle){ menuStartX + 35, 320, 15, 15 }, "Green", greenC);
+                blueC = GuiCheckBox((Rectangle){ menuStartX + 35, 340, 15, 15 }, "Blue", blueC);
+
+            }
 
             sizeOfBrush = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 120, 120, 20 }, "Size of brush", NULL, sizeOfBrush, 0, 75);
             char *sizeText = (char*)malloc(16 * sizeof(char));
@@ -378,11 +299,13 @@ int main()
             // Jeu
 
             for (int i = 0; i < cols * rows; i++) {
+
                 if (listOfCellsToDraw[i].alive == 1) {
-                    fillCell(listOfCellsToDraw[i].x, listOfCellsToDraw[i].y, cols, rows, menuStartX, 1);
+                    listOfCellsToDraw[i].dateCreated = framesSinceBeginning;
+                    fillCell(listOfCellsToDraw[i].x, listOfCellsToDraw[i].y, cols, rows, menuStartX, 1, doColor, listOfCellsToDraw[i].dateCreated, framesSinceBeginning, redC, greenC, blueC);
 
                 } else {
-                    fillCell(listOfCellsToDraw[i].x, listOfCellsToDraw[i].y, cols, rows, menuStartX, 0);
+                    fillCell(listOfCellsToDraw[i].x, listOfCellsToDraw[i].y, cols, rows, menuStartX, 0, doColor, listOfCellsToDraw[i].dateCreated, framesSinceBeginning, redC, greenC, blueC);
 
                 }
             }
@@ -394,29 +317,26 @@ int main()
             // Render
 
             if (displayGrid) {
-            renderGrid(cols, rows, 3, menuStartX);
+                renderGrid(cols, rows, 3, menuStartX);
             }
-            framesSinceBeginning++;
 
             // Debug
 
             if (VECTOR_GET(debugMessages, char*, 0) != NULL) {
                 if (displayDebug) {
-                DrawText(VECTOR_GET(debugMessages, char*, 0), 10, GetScreenHeight() - 50, 25, RED);
+                    DrawText(VECTOR_GET(debugMessages, char*, 0), 10, GetScreenHeight() - 50, 25, RED);
                 }
                 debugMessageAlive++;
 
                 if (debugMessageAlive == 1) {
+
                     debugMessageAlive = 0;
-                    
                     VECTOR_DELETE(debugMessages, 0);
 
                 }
             }
             
-            
-            
-            DrawFPS(GetScreenWidth() - 30, GetScreenHeight() - 30);
+            DrawFPS(GetScreenWidth() - 100, GetScreenHeight() - 30);
 
         EndDrawing();
         //----------------------------------------------------------------------------------
