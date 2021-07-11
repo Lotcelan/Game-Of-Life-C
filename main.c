@@ -162,6 +162,7 @@ int main()
     bool displayGrid = false;
     bool displayDebug = false;
     bool populateRandomly = false;
+    bool populateRandomlyOnClick = false;
 
     int sizeOfBrush = 3;
     int fps = 15;
@@ -275,8 +276,15 @@ int main()
             for (int i = xCellClicked - sizeOfBrush; i < xCellClicked + sizeOfBrush + 1; i++) {
                 for (int j = yCellClicked - sizeOfBrush; j < yCellClicked + sizeOfBrush + 1; j++) {
                     if (i >= 0 && i <= (cols - 1) && j >= 0 && j <= (rows - 1)) {
-                        listOfCells[locToSlot(i, j, rows, cols)].alive = 1;
-                        listOfCellsToDraw[locToSlot(i, j, rows, cols)].alive = 1;
+                        if (populateRandomlyOnClick) {
+                            int r = GetRandomValue(0,1);
+                            listOfCells[locToSlot(i, j, rows, cols)].alive = r;
+                            listOfCellsToDraw[locToSlot(i, j, rows, cols)].alive = r;
+                        }
+                        else {
+                            listOfCells[locToSlot(i, j, rows, cols)].alive = 1;
+                            listOfCellsToDraw[locToSlot(i, j, rows, cols)].alive = 1;
+                        }
                     }
                 }
             }
@@ -355,10 +363,17 @@ int main()
             displayGrid = GuiCheckBox((Rectangle){ menuStartX + 10, menuStartY + 80, 25, 25 }, "Display Grid", displayGrid);
             displayDebug = GuiCheckBox((Rectangle){ menuStartX + 10, GetScreenHeight() - 70, 25, 25 }, "Display debug messages", displayDebug);
             populateRandomly = GuiCheckBox((Rectangle){ menuStartX + 10, GetScreenHeight() - 110, 25, 25 }, "Populate randomly", populateRandomly);
-            
-            sizeOfBrush = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 120, 120, 20 }, "Size of brush", NULL, sizeOfBrush, 0, 75);
-            fps = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 180, 120, 20 }, "FPS", NULL, fps, 1, 120);
+            populateRandomlyOnClick = GuiCheckBox((Rectangle){ menuStartX + 10, 230, 25, 25 }, "Populate randomly on click", populateRandomlyOnClick);
 
+            sizeOfBrush = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 120, 120, 20 }, "Size of brush", NULL, sizeOfBrush, 0, 75);
+            char *sizeText = (char*)malloc(16 * sizeof(char));
+            sprintf(sizeText, "%d", sizeOfBrush);
+            DrawText(sizeText, menuStartX + 100, menuStartY + 145, 15, BLACK);
+
+            fps = GuiSliderBar((Rectangle){ menuStartX + 100, menuStartY + 180, 120, 20 }, "FPS", NULL, fps, 1, 120);
+            char *fpsText = (char*)malloc(16 * sizeof(char));
+            sprintf(fpsText, "%d", fps);
+            DrawText(fpsText, menuStartX + 100, menuStartY + 205, 15, BLACK);
 
             // Jeu
 
